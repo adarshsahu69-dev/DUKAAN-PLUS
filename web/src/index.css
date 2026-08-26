@@ -17,6 +17,10 @@ body {
   background: #f1f5f9;
   -webkit-font-smoothing: antialiased;
 }
+.dark body {
+  background: #0f172a;
+  color: #e2e8f0;
+}
 
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {

@@ -2,6 +2,8 @@ import { useState, type ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../store/auth";
 import { useData } from "../store/data";
+import { useUi } from "../store/ui";
+import { useI18n } from "../lib/i18n";
 import { Spinner } from "./ui";
 
 const NAV = [
@@ -13,6 +15,7 @@ const NAV = [
   { to: "/customers", label: "Customers", icon: "M17 20h5v-1a4 4 0 00-4-4M9 11a4 4 0 100-8 4 4 0 000 8zM3 20v-2a4 4 0 014-4h2" },
   { to: "/reports", label: "Reports", icon: "M4 19V5m5 14V9m5 10V7m5 12v-6" },
   { to: "/users", label: "Users", icon: "M12 14a4 4 0 100-8 4 4 0 000 8zM4 20v-1a6 6 0 016-6h4a6 6 0 016 6v1", adminOnly: true },
+  { to: "/settings", label: "Settings", icon: "M12 8v8M8 12h8M4 6h16M4 18h16", adminOnly: true },
 ];
 
 function Icon({ d, className = "h-5 w-5" }: { d: string; className?: string }) {
@@ -32,6 +35,10 @@ export default function Layout({ children }: { children: ReactNode }) {
   const syncing = useData((s) => s.syncing);
   const lastSync = useData((s) => s.lastSync);
   const syncNow = useData((s) => s.syncNow);
+
+  const { dark, toggleDark, soundOn, toggleSound } = useUi();
+  const { lang, setLang, t } = useI18n();
+
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const items = NAV.filter((n) => !n.adminOnly || user?.role === "admin");
@@ -42,7 +49,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-100">
+    <div className="flex min-h-screen bg-slate-100 dark:bg-slate-900">
       <aside className="hidden md:flex w-60 flex-col bg-brand-800 text-brand-50">
         <div className="px-5 py-4 text-lg font-bold tracking-tight">Kirana</div>
         <nav className="flex-1 space-y-1 px-3">
@@ -58,7 +65,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               }
             >
               <Icon d={n.icon} />
-              {n.label}
+              {t(n.label.toLowerCase())}
             </NavLink>
           ))}
         </nav>
@@ -68,8 +75,8 @@ export default function Layout({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex flex-1 flex-col">
-        <header className="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3">
-          <button className="md:hidden text-slate-600" onClick={() => setMobileOpen((v) => !v)}>
+        <header className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3">
+          <button className="md:hidden text-slate-600 dark:text-slate-300" onClick={() => setMobileOpen((v) => !v)}>
             <Icon d="M4 6h16M4 12h16M4 18h16" />
           </button>
           <div className="flex-1" />
@@ -77,30 +84,39 @@ export default function Layout({ children }: { children: ReactNode }) {
             <button
               onClick={() => syncNow()}
               disabled={!online || syncing}
-              className="btn-secondary btn-sm"
+              className="btn-secondary btn-sm dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
               title="Sync with server"
             >
               {syncing ? <Spinner size={14} /> : null}
-              {online ? (syncing ? "Syncing…" : "Sync") : "Offline"}
+              {online ? (syncing ? "Syncing…" : t("sync")) : t("offline")}
             </button>
             <span
               className={`badge ${online ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}
             >
-              {online ? "Online" : "Offline"}
+              {online ? t("online") : t("offline")}
             </span>
             {lastSync && (
               <span className="hidden text-xs text-slate-400 sm:inline">
                 {new Date(lastSync).toLocaleTimeString()}
               </span>
             )}
+            <button onClick={toggleSound} className="btn-secondary btn-sm dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600" title="Sound">
+              {soundOn ? "🔔" : "🔕"}
+            </button>
+            <button onClick={toggleDark} className="btn-secondary btn-sm dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600" title={t("darkMode")}>
+              {dark ? "☀️" : "🌙"}
+            </button>
+            <button onClick={() => setLang(lang === "en" ? "hi" : "en")} className="btn-secondary btn-sm dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600" title={t("language")}>
+              {lang === "en" ? "हि" : "EN"}
+            </button>
           </div>
           <div className="ml-2 flex items-center gap-2">
             <div className="text-right leading-tight">
-              <div className="text-sm font-semibold text-slate-700">{user?.fullName || user?.username}</div>
+              <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">{user?.fullName || user?.username}</div>
               <div className="text-xs text-slate-400 capitalize">{user?.role}</div>
             </div>
             <button onClick={doLogout} className="btn-danger btn-sm">
-              Logout
+              {t("logout")}
             </button>
           </div>
         </header>
@@ -113,7 +129,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
         <main className="flex-1 p-4 md:p-6">{children}</main>
 
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 grid grid-cols-4 border-t border-slate-200 bg-white text-slate-600">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 grid grid-cols-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300">
           {items.slice(0, 8).map((n) => (
             <NavLink
               key={n.to}
@@ -124,7 +140,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               }
             >
               <Icon d={n.icon} className="h-5 w-5" />
-              {n.label}
+              {t(n.label.toLowerCase())}
             </NavLink>
           ))}
         </nav>
