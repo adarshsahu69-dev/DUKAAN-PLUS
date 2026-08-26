@@ -19,6 +19,8 @@ const EMPTY = {
   expiryDate: "",
   imageUrl: "",
   isActive: true,
+  gstRate: 0,
+  hsnCode: "",
 };
 
 type SortKey = "name" | "stock" | "price";
@@ -83,6 +85,8 @@ export default function Products() {
       expiryDate: p.expiryDate ? p.expiryDate.slice(0, 10) : "",
       imageUrl: p.imageUrl || "",
       isActive: p.isActive,
+      gstRate: p.gstRate || 0,
+      hsnCode: p.hsnCode || "",
     });
     setModalOpen(true);
   }
@@ -99,6 +103,8 @@ export default function Products() {
       stockQty: Number(form.stockQty) || 0,
       reorderLevel: Number(form.reorderLevel) || 0,
       expiryDate: form.expiryDate || null,
+      gstRate: Number(form.gstRate) || 0,
+      hsnCode: form.hsnCode || null,
     };
     try {
       if (editing) await updateProduct(editing.id, payload);
@@ -242,6 +248,8 @@ export default function Products() {
           <Field label="Selling Price"><input type="number" className="input" value={form.sellingPrice} onChange={(e) => setForm({ ...form, sellingPrice: e.target.value })} /></Field>
           <Field label="Stock Qty"><input type="number" className="input" value={form.stockQty} onChange={(e) => setForm({ ...form, stockQty: e.target.value })} /></Field>
           <Field label="Reorder Level"><input type="number" className="input" value={form.reorderLevel} onChange={(e) => setForm({ ...form, reorderLevel: e.target.value })} /></Field>
+          <Field label="GST Rate (%)"><input type="number" className="input" value={form.gstRate} onChange={(e) => setForm({ ...form, gstRate: e.target.value })} /></Field>
+          <Field label="HSN Code"><input className="input" value={form.hsnCode} onChange={(e) => setForm({ ...form, hsnCode: e.target.value })} /></Field>
           <Field label="Expiry Date"><input type="date" className="input" value={form.expiryDate} onChange={(e) => setForm({ ...form, expiryDate: e.target.value })} /></Field>
           <Field label="Image URL"><input className="input" value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} /></Field>
         </div>
