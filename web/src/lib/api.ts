@@ -105,6 +105,9 @@ export const api = {
     push: (payload: any) => request<{ applied: number; serverTime: string }>("/sync/push", { method: "POST", body: JSON.stringify(payload) }),
     status: () => request<any>("/sync/status"),
   },
+
+  getSettings: () => request<{ settings: any }>("/settings"),
+  updateSettings: (s: any) => request<{ settings: any }>("/settings", { method: "PUT", body: JSON.stringify(s) }),
 };
 
 export function isOnline(): boolean {

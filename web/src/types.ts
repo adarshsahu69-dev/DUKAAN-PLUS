@@ -35,6 +35,8 @@ export interface Product {
   expiryDate?: string | null;
   imageUrl?: string | null;
   isActive: boolean;
+  gstRate: number;
+  hsnCode?: string | null;
   categoryName?: string;
   unitCode?: string;
   createdAt?: string;
@@ -74,6 +76,11 @@ export interface SaleItem {
   unitPrice: number;
   costPrice: number;
   lineTotal: number;
+  gstRate: number;
+  cgstAmount: number;
+  sgstAmount: number;
+  igstAmount: number;
+  taxableValue: number;
 }
 
 export interface Sale {
@@ -90,6 +97,11 @@ export interface Sale {
   paymentMethod: PaymentMethod;
   amountPaid: number;
   creditAmount: number;
+  gstType: "intra" | "inter";
+  taxableValue: number;
+  cgstAmount: number;
+  sgstAmount: number;
+  igstAmount: number;
   createdAt: string;
   items?: SaleItem[];
 }
@@ -133,4 +145,13 @@ export interface ReportSummary {
   grossProfit: number;
   purchases: number;
   lowStockCount: number;
+}
+
+export interface ShopSettings {
+  id: number;
+  shopName?: string | null;
+  gstin?: string | null;
+  address?: string | null;
+  phone?: string | null;
+  updatedAt?: string;
 }

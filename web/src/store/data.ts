@@ -11,6 +11,7 @@ import type {
   SaleItem,
   Purchase,
   PurchaseItem,
+  ShopSettings,
 } from "../types";
 
 interface DataState {
@@ -26,6 +27,7 @@ interface DataState {
   customers: Customer[];
   sales: Sale[];
   purchases: Purchase[];
+  settings: ShopSettings | null;
 
   init: () => Promise<void>;
   setOnline: (v: boolean) => void;
@@ -45,6 +47,11 @@ interface DataState {
   recordSale: (input: SaleInput) => Promise<Sale>;
   recordPurchase: (input: PurchaseInput) => Promise<Purchase>;
 
+  loadSettings: () => Promise<void>;
+  updateSettings: (s: Partial<ShopSettings>) => Promise<void>;
+  backupData: () => Promise<Blob>;
+  restoreData: (blob: Blob) => Promise<void>;
+
   flushQueue: () => Promise<void>;
 }
 
@@ -56,11 +63,13 @@ export interface SaleInput {
     qty: number;
     unitPrice: number;
     costPrice?: number;
+    gstRate?: number;
   }[];
   discountType: "none" | "percent" | "fixed";
   discountValue: number;
   paymentMethod: "cash" | "upi" | "card" | "credit";
   amountPaid: number;
+  gstType: "intra" | "inter";
 }
 
 export interface PurchaseInput {
@@ -93,6 +102,7 @@ export const useData = create<DataState>((set, get) => ({
   customers: [],
   sales: [],
   purchases: [],
+  settings: null,
 
   async init() {
     const [products, categories, units, suppliers, customers, sales, purchases] = await Promise.all([
@@ -116,6 +126,7 @@ export const useData = create<DataState>((set, get) => ({
       lastSync: (await db.getMeta<string>("lastSync")) || null,
     });
     if (get().online) get().syncNow().catch(() => {});
+    get().loadSettings().catch(() => {});
   },
 
   setOnline(v) {
@@ -279,6 +290,11 @@ export const useData = create<DataState>((set, get) => ({
       unitPrice: i.unitPrice,
       costPrice: i.costPrice ?? 0,
       lineTotal: +(i.qty * i.unitPrice).toFixed(2),
+      gstRate: i.gstRate ?? 0,
+      cgstAmount: 0,
+      sgstAmount: 0,
+      igstAmount: 0,
+      taxableValue: 0,
     }));
     const sale: Sale = {
       id,
@@ -338,7 +354,9 @@ export const useData = create<DataState>((set, get) => ({
         unitPrice: i.unitPrice,
         costPrice: i.costPrice,
         lineTotal: i.lineTotal,
+        gstRate: i.gstRate,
       })),
+      gstType: input.gstType,
     };
     if (get().online) {
       api.createSale(payload).catch((e) => console.error("[sale] push failed", e));
@@ -427,6 +445,67 @@ export const useData = create<DataState>((set, get) => ({
         console.error("[queue] failed", err);
       }
     }
+  },
+
+  async loadSettings() {
+    try {
+      if (get().online) {
+        const res = await api.getSettings();
+        set({ settings: res.settings });
+      }
+    } catch {
+      /* ignore */
+    }
+  },
+
+  async updateSettings(patch) {
+    const res = await api.updateSettings(patch);
+    set({ settings: res.settings });
+  },
+
+  async backupData() {
+    const [products, categories, units, suppliers, customers, sales, purchases] = await Promise.all([
+      db.all<any>("products"),
+      db.all<any>("categories"),
+      db.all<any>("units"),
+      db.all<any>("suppliers"),
+      db.all<any>("customers"),
+      db.all<any>("sales"),
+      db.all<any>("purchases"),
+    ]);
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      products,
+      categories,
+      units,
+      suppliers,
+      customers,
+      sales,
+      purchases,
+    };
+    return new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  },
+
+  async restoreData(blob: Blob) {
+    const text = await blob.text();
+    const data = JSON.parse(text);
+    if (!data || !data.version) throw new Error("Invalid backup file");
+    await db.clear("products");
+    await db.clear("categories");
+    await db.clear("units");
+    await db.clear("suppliers");
+    await db.clear("customers");
+    await db.clear("sales");
+    await db.clear("purchases");
+    if (data.products?.length) await db.bulkPut("products", data.products);
+    if (data.categories?.length) await db.bulkPut("categories", data.categories);
+    if (data.units?.length) await db.bulkPut("units", data.units);
+    if (data.suppliers?.length) await db.bulkPut("suppliers", data.suppliers);
+    if (data.customers?.length) await db.bulkPut("customers", data.customers);
+    if (data.sales?.length) await db.bulkPut("sales", data.sales);
+    if (data.purchases?.length) await db.bulkPut("purchases", data.purchases);
+    await get().init();
   },
 }));
 
