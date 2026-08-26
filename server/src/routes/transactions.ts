@@ -37,6 +37,10 @@ router.get("/sales/:id", asyncHandler(async (req, res) => {
   const id = idSchema.parse(req.params.id);
   const { rows } = await pool.query("SELECT * FROM sales WHERE id=$1", [id]);
   if (!rows[0]) throw new HttpError(404, "Sale not found");
+  // IDOR: staff may only view their own sales; admin may view any
+  if (req.auth!.role !== "admin" && rows[0].user_id !== req.auth!.userId) {
+    throw new HttpError(403, "You are not authorized to view this sale");
+  }
   const items = await pool.query("SELECT * FROM sale_items WHERE sale_id=$1", [id]);
   res.json({
     sale: snakeToCamel(rows)[0],

@@ -4,6 +4,7 @@ import { Modal, Spinner, Field, Badge } from "../components/ui";
 import BarcodeScanner from "../components/BarcodeScanner";
 import { money, num } from "../lib/format";
 import { exportSalesPDF } from "../lib/export";
+import { escapeHtml } from "../lib/html";
 import { useI18n } from "../lib/i18n";
 import { useUi } from "../store/ui";
 import { sound } from "../lib/sound";
@@ -179,18 +180,18 @@ export default function Billing() {
     if (!done) return;
     const w = window.open("", "_blank", "width=400,height=600");
     if (!w) return;
-    const shopName = settings?.shopName || "Kirana Shop";
-    const shopAddr = settings?.address || "";
-    const shopGstin = settings?.gstin || "";
+    const shopName = escapeHtml(settings?.shopName || "Kirana Shop");
+    const shopAddr = escapeHtml(settings?.address || "");
+    const shopGstin = escapeHtml(settings?.gstin || "");
     const itemsHtml = doneItems
       .map(
-        (i: any) => `<tr><td>${i.productName}</td><td style="text-align:right">${i.qty}</td><td style="text-align:right">${money(i.unitPrice)}</td><td style="text-align:right">${money(i.lineTotal)}</td></tr>`
+        (i: any) => `<tr><td>${escapeHtml(i.productName)}</td><td style="text-align:right">${i.qty}</td><td style="text-align:right">${money(i.unitPrice)}</td><td style="text-align:right">${money(i.lineTotal)}</td></tr>`
       )
       .join("");
-    w.document.write(`<!doctype html><html><head><title>Invoice ${done.invoiceNo}</title>
+    w.document.write(`<!doctype html><html><head><title>Invoice ${escapeHtml(done.invoiceNo)}</title>
       <style>body{font-family:monospace,Arial;padding:16px;font-size:12px}h2{margin:0}table{width:100%;border-collapse:collapse;margin:8px 0}td,th{padding:4px 2px;border-bottom:1px solid #ddd;text-align:left}.r{text-align:right}.b{font-weight:bold}.row{display:flex;justify-content:space-between}</style></head>
       <body><h2>${shopName}</h2><div style="font-size:11px;color:#555">${shopAddr}${shopGstin ? "<br>GSTIN: " + shopGstin : ""}</div>
-      <div class="row b" style="margin-top:8px"><span>Invoice: ${done.invoiceNo}</span><span>${new Date(done.createdAt).toLocaleString()}</span></div>
+      <div class="row b" style="margin-top:8px"><span>Invoice: ${escapeHtml(done.invoiceNo)}</span><span>${new Date(done.createdAt).toLocaleString()}</span></div>
       <table><thead><tr><th>Item</th><th class="r">Qty</th><th class="r">Rate</th><th class="r">Total</th></tr></thead><tbody>${itemsHtml}</tbody></table>
       <div class="row"><span>Subtotal</span><span>${money(done.subtotal)}</span></div>
       ${done.discountAmount > 0 ? `<div class="row"><span>Discount</span><span>-${money(done.discountAmount)}</span></div>` : ""}

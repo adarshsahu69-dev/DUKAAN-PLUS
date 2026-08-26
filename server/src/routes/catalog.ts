@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { query, withTransaction } from "../db/index.js";
 import { asyncHandler, HttpError } from "../utils/errors.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, requireAdmin } from "../middleware/auth.js";
 import {
   categorySchema,
   unitSchema,
@@ -115,7 +115,7 @@ customerRouter.patch("/:id", asyncHandler(async (req, res) => {
   if (!rows[0]) throw new HttpError(404, "Customer not found");
   res.json({ customer: snakeToCamel(rows)[0] });
 }));
-customerRouter.get("/:id/statement", asyncHandler(async (req, res) => {
+customerRouter.get("/:id/statement", requireAdmin, asyncHandler(async (req, res) => {
   const id = idSchema.parse(req.params.id);
   const { rows } = await query(
     `SELECT s.invoice_no, s.total, s.credit_amount, s.created_at

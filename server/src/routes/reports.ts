@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { pool } from "../db/index.js";
 import { asyncHandler } from "../utils/errors.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, requireAdmin } from "../middleware/auth.js";
 import { snakeToCamel } from "../utils/helpers.js";
 
 const router = Router();
@@ -97,7 +97,7 @@ router.get("/stock-valuation", asyncHandler(async (_req, res) => {
   res.json({ byCategory: snakeToCamel(rows), total: Number(total.rows[0].total) });
 }));
 
-router.get("/customer-credit", asyncHandler(async (_req, res) => {
+router.get("/customer-credit", requireAdmin, asyncHandler(async (_req, res) => {
   const { rows } = await pool.query(
     `SELECT id, name, phone, credit_limit, outstanding_balance
      FROM customers WHERE outstanding_balance > 0 ORDER BY outstanding_balance DESC`
