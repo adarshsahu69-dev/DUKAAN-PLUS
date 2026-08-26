@@ -12,6 +12,7 @@ import Suppliers from "./pages/Suppliers";
 import Customers from "./pages/Customers";
 import Reports from "./pages/Reports";
 import Users from "./pages/Users";
+import Settings from "./pages/Settings";
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const user = useAuth((s) => s.user);
@@ -57,6 +58,7 @@ export default function App() {
                 <Route path="/customers" element={<Customers />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/users" element={<Users />} />
+                <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Layout>
