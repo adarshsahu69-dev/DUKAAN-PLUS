@@ -188,6 +188,8 @@ export const useData = create<DataState>((set, get) => ({
       expiryDate: p.expiryDate ?? null,
       imageUrl: p.imageUrl ?? null,
       isActive: p.isActive ?? true,
+      gstRate: p.gstRate ?? 0,
+      hsnCode: p.hsnCode ?? null,
       updatedAt: nowISO(),
     };
     await db.put("products", product);
@@ -309,6 +311,11 @@ export const useData = create<DataState>((set, get) => ({
       paymentMethod: input.paymentMethod,
       amountPaid: +amountPaid.toFixed(2),
       creditAmount: +creditAmount.toFixed(2),
+      gstType: input.gstType,
+      taxableValue: +subtotal.toFixed(2),
+      cgstAmount: 0,
+      sgstAmount: 0,
+      igstAmount: 0,
       createdAt,
       items,
     };

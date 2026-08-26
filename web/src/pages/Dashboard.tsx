@@ -41,7 +41,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-bold text-slate-800">Dashboard</h1>
+        <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">Dashboard</h1>
         <div className="flex gap-2">
           <button className="btn-primary btn-sm" onClick={() => navigate("/billing")}>New Sale</button>
           <button className="btn-secondary btn-sm" onClick={() => navigate("/products")}>Add Product</button>

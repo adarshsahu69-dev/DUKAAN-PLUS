@@ -25,6 +25,8 @@ const EMPTY = {
 
 type SortKey = "name" | "stock" | "price";
 
+const PAGE = 100; // render in pages to stay fast with 10,000+ products
+
 export default function Products() {
   const products = useData((s) => s.products);
   const categories = useData((s) => s.categories);
@@ -37,6 +39,7 @@ export default function Products() {
   const [cat, setCat] = useState("");
   const [lowOnly, setLowOnly] = useState(false);
   const [sort, setSort] = useState<SortKey>("name");
+  const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [form, setForm] = useState<any>(EMPTY);
@@ -164,21 +167,21 @@ export default function Products() {
           className="input max-w-xs"
           placeholder="Search name, barcode, SKU…"
           value={q}
-          onChange={(e) => setQ(e.target.value)}
+          onChange={(e) => { setQ(e.target.value); setPage(1); }}
         />
-        <select className="input max-w-[160px]" value={cat} onChange={(e) => setCat(e.target.value)}>
+        <select className="input max-w-[160px]" value={cat} onChange={(e) => { setCat(e.target.value); setPage(1); }}>
           <option value="">All categories</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
         </select>
-        <select className="input max-w-[140px]" value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
+        <select className="input max-w-[140px]" value={sort} onChange={(e) => { setSort(e.target.value as SortKey); setPage(1); }}>
           <option value="name">Sort: Name</option>
           <option value="stock">Sort: Stock</option>
           <option value="price">Sort: Price</option>
         </select>
         <label className="flex items-center gap-2 text-sm text-slate-600">
-          <input type="checkbox" checked={lowOnly} onChange={(e) => setLowOnly(e.target.checked)} />
+          <input type="checkbox" checked={lowOnly} onChange={(e) => { setLowOnly(e.target.checked); setPage(1); }} />
           Low stock only
         </label>
         <span className="ml-auto text-xs text-slate-400">{filtered.length} items</span>
@@ -186,9 +189,13 @@ export default function Products() {
 
       {filtered.length === 0 ? (
         <EmptyState message="No products found. Add your first product to start billing." />
-      ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {filtered.map((p) => (
+      ) : (() => {
+        const visible = filtered.slice(0, page * PAGE);
+        const hasMore = visible.length < filtered.length;
+        return (
+          <>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {visible.map((p) => (
             <div key={p.id} className="card overflow-hidden">
               <div className="flex h-20 items-center justify-center bg-slate-100 text-slate-300">
                 {p.imageUrl ? (
@@ -219,8 +226,17 @@ export default function Products() {
               </div>
             </div>
           ))}
-        </div>
-      )}
+            </div>
+            {hasMore && (
+              <div className="mt-4 flex justify-center">
+                <button className="btn-secondary" onClick={() => setPage((p) => p + 1)}>
+                  Load more ({filtered.length - visible.length} remaining)
+                </button>
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? "Edit Product" : "Add Product"} wide>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
