@@ -36,6 +36,8 @@ export const productSchema = z.object({
   expiryDate: z.string().optional(),
   imageUrl: z.string().max(500).optional(),
   isActive: z.boolean().default(true),
+  gstRate: z.number().min(0).default(0),
+  hsnCode: z.string().max(20).optional(),
 });
 
 export const supplierSchema = z.object({
@@ -61,6 +63,7 @@ export const saleItemSchema = z.object({
   unitPrice: z.number().min(0),
   costPrice: z.number().min(0).default(0),
   lineTotal: z.number().min(0),
+  gstRate: z.number().min(0).default(0),
 });
 
 export const saleSchema = z.object({
@@ -70,6 +73,7 @@ export const saleSchema = z.object({
   discountValue: z.number().min(0).default(0),
   paymentMethod: z.enum(["cash", "upi", "card", "credit"]).default("cash"),
   amountPaid: z.number().min(0).default(0),
+  gstType: z.enum(["intra", "inter"]).default("intra"),
 });
 
 export const purchaseItemSchema = z.object({

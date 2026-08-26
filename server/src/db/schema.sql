@@ -165,6 +165,18 @@ CREATE TABLE IF NOT EXISTS activity_logs (
 CREATE INDEX IF NOT EXISTS idx_activity_created ON activity_logs(created_at);
 
 -- =========================================================
+-- Shop settings (singleton row, id = 1)
+-- =========================================================
+CREATE TABLE IF NOT EXISTS shop_settings (
+  id            INT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  shop_name     TEXT,
+  gstin         TEXT,
+  address       TEXT,
+  phone         TEXT,
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- =========================================================
 -- Seed reference data
 -- =========================================================
 INSERT INTO units (name, short_code) VALUES
@@ -181,3 +193,22 @@ INSERT INTO categories (name) VALUES
   ('Grains'), ('Dairy'), ('Snacks'), ('Beverages'),
   ('Spices'), ('Household'), ('Fruits & Vegetables'), ('Other')
 ON CONFLICT (name) DO NOTHING;
+
+-- =========================================================
+-- Migrations (applied safely on every startup)
+-- =========================================================
+ALTER TABLE products ADD COLUMN IF NOT EXISTS gst_rate NUMERIC(5,2) NOT NULL DEFAULT 0;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS hsn_code TEXT;
+
+ALTER TABLE sales ADD COLUMN IF NOT EXISTS gst_type TEXT NOT NULL DEFAULT 'intra' CHECK (gst_type IN ('intra','inter'));
+ALTER TABLE sales ADD COLUMN IF NOT EXISTS taxable_value NUMERIC(14,2) NOT NULL DEFAULT 0;
+ALTER TABLE sales ADD COLUMN IF NOT EXISTS cgst_amount NUMERIC(14,2) NOT NULL DEFAULT 0;
+ALTER TABLE sales ADD COLUMN IF NOT EXISTS sgst_amount NUMERIC(14,2) NOT NULL DEFAULT 0;
+ALTER TABLE sales ADD COLUMN IF NOT EXISTS igst_amount NUMERIC(14,2) NOT NULL DEFAULT 0;
+
+ALTER TABLE sale_items ADD COLUMN IF NOT EXISTS gst_rate NUMERIC(5,2) NOT NULL DEFAULT 0;
+ALTER TABLE sale_items ADD COLUMN IF NOT EXISTS cgst_amount NUMERIC(14,2) NOT NULL DEFAULT 0;
+ALTER TABLE sale_items ADD COLUMN IF NOT EXISTS sgst_amount NUMERIC(14,2) NOT NULL DEFAULT 0;
+ALTER TABLE sale_items ADD COLUMN IF NOT EXISTS igst_amount NUMERIC(14,2) NOT NULL DEFAULT 0;
+ALTER TABLE sale_items ADD COLUMN IF NOT EXISTS taxable_value NUMERIC(14,2) NOT NULL DEFAULT 0;
+

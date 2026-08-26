@@ -21,6 +21,7 @@ export class ApiError extends Error {
 async function request<T>(path: string, options: RequestInit = {}, auth = true): Promise<T> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    "X-Requested-With": "XMLHttpRequest",
     ...((options.headers as Record<string, string>) || {}),
   };
   if (auth) {

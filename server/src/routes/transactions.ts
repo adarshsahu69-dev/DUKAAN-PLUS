@@ -58,6 +58,12 @@ router.post("/sales", asyncHandler(async (req, res) => {
     const amountPaid = Math.min(data.amountPaid, total);
     const creditAmount = +(total - amountPaid).toFixed(2);
 
+    const gstType = data.gstType || "intra";
+    let taxableValue = 0;
+    let cgstTotal = 0;
+    let sgstTotal = 0;
+    let igstTotal = 0;
+
     const providedId = (req.body as any).id;
     const providedInvoice = (req.body as any).invoiceNo;
     const providedCreated = (req.body as any).createdAt;
@@ -65,22 +71,42 @@ router.post("/sales", asyncHandler(async (req, res) => {
     const saleRes = await client.query(
       `INSERT INTO sales
          (id, invoice_no, customer_id, user_id, subtotal, discount_type, discount_value,
-          discount_amount, total, payment_method, amount_paid, credit_amount, created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+          discount_amount, total, payment_method, amount_paid, credit_amount, created_at,
+          gst_type, taxable_value, cgst_amount, sgst_amount, igst_amount)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING *`,
       [
         providedId || crypto.randomUUID(), invoiceNo, data.customerId ?? null, req.auth!.userId, subtotal, data.discountType,
         data.discountValue, discountAmount, total, data.paymentMethod, amountPaid, creditAmount,
         providedCreated || new Date().toISOString(),
+        gstType, 0, 0, 0, 0,
       ]
     );
     const sale = saleRes.rows[0];
 
     for (const item of data.items) {
+      const gstRate = item.gstRate || 0;
+      const itemTaxable = +item.lineTotal.toFixed(2);
+      const gstAmount = +(itemTaxable * (gstRate / 100)).toFixed(2);
+      let cgst = 0;
+      let sgst = 0;
+      let igst = 0;
+      if (gstType === "intra") {
+        cgst = +(gstAmount / 2).toFixed(2);
+        sgst = +(gstAmount / 2).toFixed(2);
+      } else {
+        igst = gstAmount;
+      }
+      taxableValue += itemTaxable;
+      cgstTotal += cgst;
+      sgstTotal += sgst;
+      igstTotal += igst;
       await client.query(
         `INSERT INTO sale_items
-           (id, sale_id, product_id, product_name, qty, unit_price, cost_price, line_total)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-        [item.id || crypto.randomUUID(), sale.id, item.productId ?? null, item.productName, item.qty, item.unitPrice, item.costPrice, item.lineTotal]
+           (id, sale_id, product_id, product_name, qty, unit_price, cost_price, line_total,
+            gst_rate, cgst_amount, sgst_amount, igst_amount, taxable_value)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+        [item.id || crypto.randomUUID(), sale.id, item.productId ?? null, item.productName, item.qty, item.unitPrice, item.costPrice, item.lineTotal,
+         gstRate, cgst, sgst, igst, itemTaxable]
       );
       if (item.productId) {
         await client.query(
@@ -89,6 +115,16 @@ router.post("/sales", asyncHandler(async (req, res) => {
         );
       }
     }
+
+    // persist computed GST totals on the sale
+    await client.query(
+      `UPDATE sales SET taxable_value=$1, cgst_amount=$2, sgst_amount=$3, igst_amount=$4 WHERE id=$5`,
+      [+taxableValue.toFixed(2), +cgstTotal.toFixed(2), +sgstTotal.toFixed(2), +igstTotal.toFixed(2), sale.id]
+    );
+    sale.taxable_value = +taxableValue.toFixed(2);
+    sale.cgst_amount = +cgstTotal.toFixed(2);
+    sale.sgst_amount = +sgstTotal.toFixed(2);
+    sale.igst_amount = +igstTotal.toFixed(2);
 
     if (data.customerId && creditAmount > 0) {
       await client.query(

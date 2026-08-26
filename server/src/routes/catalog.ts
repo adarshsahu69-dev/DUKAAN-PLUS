@@ -188,13 +188,13 @@ productRouter.post("/", asyncHandler(async (req, res) => {
   const { rows } = await query(
     `INSERT INTO products
        (name, sku, barcode, category_id, unit_id, cost_price, selling_price,
-        stock_qty, reorder_level, expiry_date, image_url, is_active)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+        stock_qty, reorder_level, expiry_date, image_url, is_active, gst_rate, hsn_code)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
      RETURNING *`,
     [
       d.name, d.sku ?? null, d.barcode ?? null, d.categoryId ?? null, d.unitId ?? null,
       d.costPrice, d.sellingPrice, d.stockQty, d.reorderLevel,
-      d.expiryDate ?? null, d.imageUrl ?? null, d.isActive,
+      d.expiryDate ?? null, d.imageUrl ?? null, d.isActive, d.gstRate, d.hsnCode ?? null,
     ]
   );
   res.status(201).json({ product: snakeToCamel(rows)[0] });
@@ -210,12 +210,14 @@ productRouter.patch("/:id", asyncHandler(async (req, res) => {
        cost_price=COALESCE($6,cost_price), selling_price=COALESCE($7,selling_price),
        stock_qty=COALESCE($8,stock_qty), reorder_level=COALESCE($9,reorder_level),
        expiry_date=COALESCE($10,expiry_date), image_url=COALESCE($11,image_url),
-       is_active=COALESCE($12,is_active), updated_at=now()
-     WHERE id=$13 RETURNING *`,
+       is_active=COALESCE($12,is_active), gst_rate=COALESCE($13,gst_rate),
+       hsn_code=COALESCE($14,hsn_code), updated_at=now()
+     WHERE id=$15 RETURNING *`,
     [
       d.name ?? null, d.sku ?? null, d.barcode ?? null, d.categoryId ?? null, d.unitId ?? null,
       d.costPrice ?? null, d.sellingPrice ?? null, d.stockQty ?? null, d.reorderLevel ?? null,
-      d.expiryDate ?? null, d.imageUrl ?? null, d.isActive ?? null, id,
+      d.expiryDate ?? null, d.imageUrl ?? null, d.isActive ?? null, d.gstRate ?? null,
+      d.hsnCode ?? null, id,
     ]
   );
   if (!rows[0]) throw new HttpError(404, "Product not found");
