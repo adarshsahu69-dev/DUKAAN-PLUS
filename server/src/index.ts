@@ -18,6 +18,7 @@ import { transactionRouter } from "./routes/transactions.js";
 import { reportRouter } from "./routes/reports.js";
 import { syncRouter } from "./routes/sync.js";
 import { settingsRouter } from "./routes/settings.js";
+import { createGraphqlServer } from "./graphql/server.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -59,6 +60,9 @@ async function start() {
   app.use("/api/reports", reportRouter);
   app.use("/api/sync", syncRouter);
   app.use("/api", settingsRouter);
+
+  const graphqlMiddleware = await createGraphqlServer();
+  app.use("/graphql", express.json(), graphqlMiddleware);
 
   app.use((_req, res) => res.status(404).json({ error: "Not found" }));
   app.use(errorHandler);
