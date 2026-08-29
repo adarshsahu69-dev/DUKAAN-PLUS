@@ -18,6 +18,16 @@ export const config = {
     process.env.BOOTSTRAP_ADMIN_USERNAME ?? "admin",
   bootstrapAdminPassword:
     process.env.BOOTSTRAP_ADMIN_PASSWORD ?? "admin123",
+  supabase: {
+    url: process.env.SUPABASE_URL ?? "",
+    publishableKey: process.env.SUPABASE_PUBLISHABLE_KEY ?? "",
+    secretKey: process.env.SUPABASE_SECRET_KEY ?? "",
+    jwksUrl:
+      process.env.SUPABASE_JWKS_URL ??
+      (process.env.SUPABASE_URL
+        ? `${process.env.SUPABASE_URL}/auth/v1/.well-known/jwks.json`
+        : ""),
+  },
 };
 
 export const isProd = config.nodeEnv === "production";
