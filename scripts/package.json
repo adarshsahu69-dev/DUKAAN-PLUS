@@ -1,0 +1,12 @@
+{
+  "name": "dukaan-plus-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "set-admin": "node set-admin-claim.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.6.0"
+  }
+}

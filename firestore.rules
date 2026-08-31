@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin()   { return isSignedIn() && request.auth.token.role == 'admin'; }
+    function isStaff()   { return isSignedIn() && request.auth.token.role == 'staff'; }
+    function isSelf(uid) { return isSignedIn() && request.auth.uid == uid; }
+
+    match /users/{uid} {
+      allow read:  if isAdmin() || isSelf(uid);
+      allow create: if isSelf(uid);
+      allow update: if isAdmin() || (isSelf(uid)
+                      && !(request.resource.data.diff(resource.data).affectedKeys()
+                           .hasAny(['role'])));
+      allow delete: if isAdmin();
+    }
+
+    match /shopSettings/{doc} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /categories/{id}     { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /units/{id}          { allow read: if isSignedIn(); allow write: if isAdmin(); }
+
+    match /products/{id}          { allow read: if isSignedIn(); allow write: if isAdmin() || isStaff(); }
+    match /suppliers/{id}         { allow read: if isSignedIn(); allow write: if isAdmin() || isStaff(); }
+    match /customers/{id}         { allow read: if isSignedIn(); allow write: if isAdmin() || isStaff(); }
+    match /sales/{id}             { allow read: if isSignedIn(); allow write: if isAdmin() || isStaff(); }
+    match /saleItems/{id}         { allow read: if isSignedIn(); allow write: if isAdmin() || isStaff(); }
+    match /purchases/{id}         { allow read: if isSignedIn(); allow write: if isAdmin() || isStaff(); }
+    match /purchaseItems/{id}     { allow read: if isSignedIn(); allow write: if isAdmin() || isStaff(); }
+    match /stockAdjustments/{id}  { allow read: if isSignedIn(); allow write: if isAdmin() || isStaff(); }
+
+    match /activityLogs/{id} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+  }
+}

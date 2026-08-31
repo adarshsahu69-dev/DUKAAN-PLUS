@@ -112,7 +112,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
           <div className="ml-2 flex items-center gap-2">
             <div className="text-right leading-tight">
-              <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">{user?.fullName || user?.username}</div>
+              <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">{user?.displayName || user?.email}</div>
               <div className="text-xs text-slate-400 capitalize">{user?.role}</div>
             </div>
             <button onClick={doLogout} className="btn-danger btn-sm">
