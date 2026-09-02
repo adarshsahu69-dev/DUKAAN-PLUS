@@ -45,7 +45,7 @@ export default function BarcodeScanner({
     <Modal open={open} onClose={onClose} title="Scan Barcode">
       <div className="space-y-3">
         <div className="overflow-hidden rounded-lg bg-black aspect-video">
-          <video ref={videoRef} className="h-full w-full object-cover" muted playsInline />
+          <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
         </div>
         {scanning && !error && (
           <p className="text-center text-sm text-slate-500">Point the camera at a barcode…</p>
