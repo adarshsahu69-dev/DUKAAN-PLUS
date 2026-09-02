@@ -134,3 +134,14 @@ input[type="number"] {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
   }
 }
+
+/* Barcode scanner overlay: animated horizontal line that sweeps the
+   scan frame top-to-bottom to give the user a clear scanning cue. */
+@keyframes scan-line {
+  0%   { top: 0%; }
+  50%  { top: calc(100% - 2px); }
+  100% { top: 0%; }
+}
+.animate-scan-line {
+  animation: scan-line 1.8s ease-in-out infinite;
+}
