@@ -37,6 +37,8 @@ jobs:
           EOF
 
       - run: npm install --no-audit --no-fund
+      - name: Generate PNG icons from SVGs (PWA manifest, TWA)
+        run: node scripts/generate-png-icons.mjs
       - run: npm -w web run build
 
       - uses: actions/upload-pages-artifact@v3
