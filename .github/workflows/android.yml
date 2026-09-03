@@ -1,0 +1,97 @@
+name: Build Android APK
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      versionName:
+        description: "Version name (e.g. 1.0.0)"
+        required: false
+        default: "1.0.0"
+      versionCode:
+        description: "Version code (integer, must increase per release)"
+        required: false
+        default: "1"
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Decode release keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          : "${KEYSTORE_BASE64:?Add a base64-encoded keystore as the KEYSTORE_BASE64 secret}"
+          : "${KEYSTORE_PASSWORD:?Add KEYSTORE_PASSWORD secret}"
+          : "${KEY_ALIAS:?Add KEY_ALIAS secret}"
+          : "${KEY_PASSWORD:?Add KEY_PASSWORD secret}"
+          echo "$KEYSTORE_BASE64" | base64 -d > dukaan-release.keystore
+          chmod 600 dukaan-release.keystore
+
+      - name: Determine version
+        id: ver
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            VERSION_NAME="${GITHUB_REF_NAME#v}"
+            VERSION_CODE=$(git rev-list --count HEAD)
+          else
+            VERSION_NAME="${{ inputs.versionName }}"
+            VERSION_CODE="${{ inputs.versionCode }}"
+          fi
+          echo "versionName=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "versionCode=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+
+      - name: Build signed TWA APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          npx -y @bubblewrap/cli build \
+            --manifest=twa-manifest.json \
+            --keystore=dukaan-release.keystore \
+            --keystorePass="$KEYSTORE_PASSWORD" \
+            --keyAlias="$KEY_ALIAS" \
+            --keyPass="$KEY_PASSWORD" \
+            --version="${{ steps.ver.outputs.versionName }}" \
+            --versionCode="${{ steps.ver.outputs.versionCode }}"
+
+      - name: Generate Digital Asset Links file
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          node scripts/generate-assetlinks.mjs \
+            dukaan-release.keystore \
+            "$KEY_ALIAS" \
+            "$KEYSTORE_PASSWORD" \
+            android-twa/app/build/outputs/apk/release/app-release-signed.apk.dal
+
+      - name: Upload APK to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            android-twa/app/build/outputs/apk/release/app-release-signed.apk
+            android-twa/app/build/outputs/apk/release/app-release-signed.apk.dal
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

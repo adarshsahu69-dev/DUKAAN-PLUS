@@ -1,0 +1,19 @@
+{
+  "packageId": "com.adarshsahu.dukaanplus",
+  "host": "adarshsahu69-dev.github.io",
+  "name": "DUKAAN PLUS",
+  "launcherName": "Dukaan",
+  "display": "standalone",
+  "themeColor": "#0A2C4E",
+  "backgroundColor": "#F8F4EC",
+  "orientation": "portrait",
+  "startUrl": "/DUKAAN-PLUS/",
+  "iconUrl": "https://adarshsahu69-dev.github.io/DUKAAN-PLUS/icon-512.png",
+  "maskableIconUrl": "https://adarshsahu69-dev.github.io/DUKAAN-PLUS/icon-maskable-512.png",
+  "splashScreenUrl": "https://adarshsahu69-dev.github.io/DUKAAN-PLUS/icon-maskable-512.png",
+  "versionCode": 1,
+  "versionName": "1.0.0",
+  "shortcuts": [],
+  "additionalTrustedOrigins": [],
+  "appCategory": "shopping"
+}
