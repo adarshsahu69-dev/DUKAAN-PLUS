@@ -43,9 +43,9 @@ jobs:
           : "${KEYSTORE_PASSWORD:?Add KEYSTORE_PASSWORD secret}"
           : "${KEY_ALIAS:?Add KEY_ALIAS secret}"
           : "${KEY_PASSWORD:?Add KEY_PASSWORD secret}"
-          echo "$KEYSTORE_BASE64" | base64 -di > dukaan-release.keystore
-           ls -la dukaan-release.keystore
-           keytool -list -keystore dukaan-release.keystore -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS"
+          echo "$KEYSTORE_BASE64" | node scripts/decode-keystore.mjs
+          ls -la dukaan-release.keystore
+          keytool -list -keystore dukaan-release.keystore -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS"
           chmod 600 dukaan-release.keystore
 
       - name: Determine version
