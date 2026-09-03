@@ -18,12 +18,13 @@ if (pad !== 4) {
 try {
   const buf = Buffer.from(clean, "base64");
   if (buf.length === 0) {
-    throw new Error("decoded buffer is empty — the base64 secret may be truncated or invalid");
+    throw new Error("decoded buffer is empty - the base64 secret may be truncated or invalid");
   }
   writeFileSync("dukaan-release.keystore", buf);
   console.log(
-    `OK: decoded ` + clean.length + ` base64 chars -> ` +
-    buf.length + ` bytes -> dukaan-release.keystore`
+    "OK: raw input " + raw.length + " chars, " +
+    clean.length + " base64 chars -> " +
+    buf.length + " bytes -> dukaan-release.keystore"
   );
 } catch (e) {
   console.error("FAIL: could not decode KEYSTORE_BASE64:", e.message);
