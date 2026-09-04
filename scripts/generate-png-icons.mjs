@@ -5,12 +5,18 @@
 // to be called from the PWA deploy workflow as a prebuild step so the
 // generated PNGs are never committed (they're reproducible from the SVGs).
 import { readFile, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = resolve(__dirname, "..", "web", "public");
+
+// "any"-purpose icons may be committed as brand source assets; keep the
+// committed file instead of regenerating it from the SVG so a provided logo
+// survives CI rebuilds.
+const COMMITTED = new Set(["icon-192.png", "icon-512.png"]);
 
 const targets = [
   { src: "icon.svg", out: "icon-192.png", size: 192 },
@@ -23,6 +29,10 @@ const targets = [
 ];
 
 for (const t of targets) {
+  if (COMMITTED.has(t.out) && existsSync(resolve(PUBLIC, t.out))) {
+    console.log("skip (committed brand asset)", t.out);
+    continue;
+  }
   const svg = await readFile(resolve(PUBLIC, t.src));
   const png = await sharp(svg, { density: 384 })
     .resize(t.size, t.size, {
