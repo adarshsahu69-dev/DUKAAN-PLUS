@@ -5,7 +5,8 @@
   "description": "Kirana Shop Inventory Management System - offline-first PWA with Express/PostgreSQL backend",
   "workspaces": [
     "server",
-    "web"
+    "web",
+    "scripts"
   ],
   "scripts": {
     "dev": "concurrently -n server,web -c blue,green \"npm:dev:server\" \"npm:dev:web\"",

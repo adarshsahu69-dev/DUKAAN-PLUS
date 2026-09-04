@@ -28,3 +28,6 @@ yarn-error.log*
 # Coverage
 coverage/
 live-bundle.js
+
+# Generated PWA / TWA icons (reproducible from SVGs via scripts/generate-png-icons.mjs)
+/web/public/*.png
